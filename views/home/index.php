@@ -13,12 +13,13 @@
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow">
 
-
             <?php 
-            // Mapping gambar berdasarkan jenis_lapangan langsung dari assets/img
+            // Mapping gambar berdasarkan nama_lapangan
             $foto_map = [
-                1 =>  'assets/img/A1.jfif',
-                2 =>  'assets/img/lapangan2.jfif',
+                'A1' => 'assets/img/badminton1.jfif',
+                'A2' => 'assets/img/badminton2.jfif',
+                'B1' => 'assets/img/futsal1.jfif',
+                'B2' => 'assets/img/futsal2.jfif',
             ];
             $foto_src = $foto_map[$lapangan['nama_lapangan']] ?? 'assets/img/default.jpg';
             ?>
