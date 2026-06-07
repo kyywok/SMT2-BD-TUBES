@@ -37,7 +37,6 @@ class LapanganModel {
         $stmt->bindParam(':harga_per_jam', $data['harga_per_jam']);
         $stmt->bindParam(':fasilitas', $data['fasilitas']);
         $stmt->bindParam(':status_lapangan', $data['status_lapangan']);
-        $stmt->bindParam(':gambar', $gambar_name);
         if($stmt->execute()) {
             return $this->conn->lastInsertId();
         }
@@ -45,19 +44,7 @@ class LapanganModel {
     }
 
     // UPDATE lapangan (DML - UPDATE)
-    public function updateLapangan($id, $data, $gambar_name = null) {
-    if ($gambar_name) {
-        $query = "UPDATE lapangan SET 
-                    nama_lapangan = :nama_lapangan,
-                    jenis_lapangan = :jenis_lapangan,
-                    harga_per_jam = :harga_per_jam,
-                    fasilitas = :fasilitas,
-                    status_lapangan = :status_lapangan,
-                    gambar = :gambar
-                  WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':gambar', $gambar_name);
-    } else {
+    public function updateLapangan($id, $data) {
         $query = "UPDATE lapangan SET 
                     nama_lapangan = :nama_lapangan,
                     jenis_lapangan = :jenis_lapangan,
@@ -65,8 +52,6 @@ class LapanganModel {
                     fasilitas = :fasilitas,
                     status_lapangan = :status_lapangan
                   WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-    }
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->bindParam(':nama_lapangan', $data['nama_lapangan']);

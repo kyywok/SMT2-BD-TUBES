@@ -30,6 +30,18 @@
                     <option value="0" <?= $lapangan['status_lapangan']==0?'selected':'' ?>>Tidak Tersedia</option>
                 </select>
             </div>
+             <input type="hidden" name="foto_lama" value="<?= $lapangan['foto'] ?>">
+    <!-- ... input lain ... -->
+    <div class="mb-3">
+        <label>Foto Saat Ini</label><br>
+        <?php if($lapangan['foto'] && file_exists("uploads/lapangan/" . $lapangan['foto'])): ?>
+            <img src="uploads/lapangan/<?= $lapangan['foto'] ?>" width="150" class="img-thumbnail mb-2"><br>
+        <?php else: ?>
+            <span class="text-muted">Belum ada foto</span><br>
+        <?php endif; ?>
+        <label>Ganti Foto (opsional)</label>
+        <input type="file" name="foto" class="form-control" accept="image/jpeg,image/png,image/jpg">
+    </div>
             <button type="submit" class="btn btn-primary">Update</button>
             <a href="index.php" class="btn btn-secondary">Batal</a>
         </form>

@@ -11,7 +11,6 @@ class LapanganController {
 
     // Menampilkan daftar lapangan
     public function index() {
-        echo    "LapanganController->index() dipanggil";
         $lapanganList = $this->model->getAllLapangan();
         include 'views/lapangan/index.php';
     }

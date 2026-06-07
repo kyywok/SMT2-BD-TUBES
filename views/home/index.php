@@ -12,12 +12,22 @@
     <?php foreach($lapanganList as $lapangan): ?>
     <div class="col-md-4 mb-4">
         <div class="card h-100 shadow">
-            <!-- Gambar placeholder (sesuaikan dengan gambar yang ada) -->
-            <img src="assets/img/lapangan1<?= $lapangan['jenis_lapangan'] ?>.jpg" 
-                 class="card-img-top" 
-                 alt="<?= $lapangan['nama_lapangan'] ?>"
-                 onerror="this.src='https://via.placeholder.com/300x200?text=Lapangan'"
+
+            <?php 
+            // Mapping gambar berdasarkan nama_lapangan
+            $foto_map = [
+                'A1' => 'assets/img/badminton1.jfif',
+                'A2' => 'assets/img/badminton2.jfif',
+                'B1' => 'assets/img/futsal1.jfif',
+                'B2' => 'assets/img/futsal2.jfif',
+            ];
+            $foto_src = $foto_map[$lapangan['nama_lapangan']] ?? 'assets/img/default.jpg';
+            ?>
+
+            <img src="<?= $foto_src ?>" class="card-img-top" 
+                 alt="<?= htmlspecialchars($lapangan['nama_lapangan']) ?>" 
                  style="height: 200px; object-fit: cover;">
+
             <div class="card-body">
                 <h5 class="card-title"><?= htmlspecialchars($lapangan['nama_lapangan']) ?></h5>
                 <p class="card-text">

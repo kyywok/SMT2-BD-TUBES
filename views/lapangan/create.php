@@ -30,6 +30,12 @@
                     <option value="0">Tidak Tersedia</option>
                 </select>
             </div>
+            <!-- ... input lain ... -->
+    <div class="mb-3">
+        <label>Foto Lapangan</label>
+        <input type="file" name="foto" class="form-control" accept="image/jpeg,image/png,image/jpg">
+        <small class="text-muted">Ukuran maksimal 2MB, format JPG/PNG</small>
+    </div>
             <button type="submit" class="btn btn-primary">Simpan</button>
             <a href="index.php" class="btn btn-secondary">Batal</a>
         </form>
