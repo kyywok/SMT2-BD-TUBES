@@ -5,7 +5,7 @@
 <?php else: ?>
 <div class="row mb-3">
     <div class="col-md-6">
-        <div class="card text-white bg-warning">
+        <div class="card text-white bg-black">
             <div class="card-body">
                 <h5>Booking Menunggu Konfirmasi</h5>
                 <h3><?= $jumlahMenunggu ?></h3>
@@ -13,9 +13,9 @@
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card text-white bg-success">
+        <div class="card text-white bg-black">
             <div class="card-body">
-                <h5>Total Pendapatan Lunas</h5>
+                <h5>Total Pendapatan </h5>
                 <h3>Rp <?= number_format($totalPendapatan,0,',','.') ?></h3>
             </div>
         </div>
@@ -29,7 +29,8 @@
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th>ID</th><th>Pelanggan</th><th>Lapangan</th><th>Tanggal</th><th>Jam</th><th>Total</th><th>Status Booking</th><th>Bukti</th><th>Aksi</th>
+            <th>ID</th><th>Pelanggan</th><th>Lapangan</th><th>Tanggal</th><th>Jam</th><th>Total</th><th>Metode Bayar</th>
+            <th>Status Booking</th><th>Bukti</th><th>Aksi</th>
         </tr>
     </thead>
     <tbody>
@@ -41,6 +42,7 @@
             <td><?= date('d-m-Y', strtotime($b['tanggal_sewa'])) ?></td>
             <td><?= substr($b['jam_mulai'],0,5) ?> - <?= substr($b['jam_selesai'],0,5) ?></td>
             <td>Rp <?= number_format($b['total_biaya'],0,',','.') ?></td>
+            <td><?= ($b['metode_bayar'] ?? 0) == 1 ? 'BCA' : (($b['metode_bayar'] ?? 0) == 2 ? 'QRIS' : '-') ?></td>
             <td>
                 <?php
                     if ($b['status_booking'] == 1) echo '<span class="badge bg-warning">Menunggu</span>';
@@ -60,8 +62,8 @@
                     <input type="hidden" name="id_booking" value="<?= $b['id'] ?>">
                     <select name="status_booking" class="form-select form-select-sm d-inline w-auto">
                         <option value="1" <?= $b['status_booking']==1?'selected':'' ?>>Menunggu</option>
-                        <option value="2" <?= $b['status_booking']==2?'selected':'' ?>>Lunas</option>
-                        <option value="3" <?= $b['status_booking']==3?'selected':'' ?>>Batal</option>
+                        <option value="2" <?= $b['status_booking']==2?'selected':'' ?>>Dikonfirmasi</option>
+                        <option value="3" <?= $b['status_booking']==3?'selected':'' ?>>Dibatalkan</option>
                     </select>
                     <button type="submit" class="btn btn-sm btn-primary">Update</button>
                 </form>

@@ -84,13 +84,30 @@ class BookingController {
 
     // STEP 2: Tampilkan halaman pembayaran (ringkasan + upload bukti)
     public function payment() {
-        // Pastikan ada data temp_booking di session
-        if (!isset($_SESSION['temp_booking'])) {
-            header("Location: index.php?controller=home&action=index");
-            exit();
-        }
-        $booking = $_SESSION['temp_booking'];
-        include 'views/booking/payment.php';
+       // Pastikan ada data booking sementara
+    if (!isset($_SESSION['temp_booking'])) {
+        header("Location: index.php?controller=home&action=index");
+        exit();
+    }
+    
+    // Jika belum ada expiry time, buat baru (5 menit dari sekarang)
+    if (!isset($_SESSION['payment_expiry'])) {
+        $_SESSION['payment_expiry'] = time() + (5 * 60); // 5 menit dalam detik
+    }
+    
+    // Cek apakah sudah expired
+    if (time() > $_SESSION['payment_expiry']) {
+        // Hapus session booking dan expiry, lalu redirect dengan pesan
+        unset($_SESSION['temp_booking']);
+        unset($_SESSION['payment_expiry']);
+        echo "<script>alert('Waktu pembayaran habis! Silakan booking ulang.'); window.location.href='index.php?controller=home&action=index';</script>";
+        exit();
+    }
+    
+    $booking = $_SESSION['temp_booking'];
+    // Hitung sisa waktu untuk ditampilkan di view
+    $remaining = $_SESSION['payment_expiry'] - time();
+    include 'views/booking/payment.php';
     }
 
     // STEP 2: Proses upload bukti dan simpan ke database
@@ -116,8 +133,9 @@ class BookingController {
                 'total_biaya' => $temp['total_biaya']
             ];
 
-            // Simpan booking dan pembayaran (method sebelumnya)
-            $booking_id = $this->bookingModel->createBookingWithPayment($data, $_FILES['bukti_transfer']);
+            $metode_bayar = isset($_POST['metode_bayar']) ? (int)$_POST['metode_bayar'] : 1;
+            $booking_id = $this->bookingModel->createBookingWithPayment($data, $_FILES['bukti_transfer'], $metode_bayar);
+
             if ($booking_id) {
                 // Hapus data sementara dari session
                 unset($_SESSION['temp_booking']);
@@ -142,8 +160,7 @@ class BookingController {
         include 'views/booking/success.php';
     }
 
-    // ... method lain untuk admin (index, updateStatus) tetap sama seperti sebelumnya
-
+    
 
     // ========== AREA ADMIN (HARUS LOGIN) ==========
     // Menampilkan daftar booking untuk admin
@@ -182,5 +199,7 @@ class BookingController {
             }
         }
     }
+
+
 }
 ?>

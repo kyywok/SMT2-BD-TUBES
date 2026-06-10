@@ -12,54 +12,50 @@ class BookingModel {
     }
 
     // Method untuk booking tanpa login (pelanggan umum)
-    public function createBookingWithPayment($data, $file_bukti) {
-        try {
-            $this->conn->beginTransaction();
+    public function createBookingWithPayment($data, $file_bukti, $metode_bayar) {
+    try {
+        $this->conn->beginTransaction();
 
-            // 1. Insert ke tabel booking
-            $query = "INSERT INTO booking (id_lapangan, nama_pelanggan, email_pelanggan, no_telp_pelanggan, 
-                      tanggal_sewa, jam_mulai, jam_selesai, total_biaya, status_booking)
-                      VALUES (:id_lapangan, :nama_pelanggan, :email_pelanggan, :no_telp_pelanggan,
-                      :tanggal_sewa, :jam_mulai, :jam_selesai, :total_biaya, 1)";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id_lapangan', $data['id_lapangan']);
-            $stmt->bindParam(':nama_pelanggan', $data['nama_pelanggan']);
-            $stmt->bindParam(':email_pelanggan', $data['email_pelanggan']);
-            $stmt->bindParam(':no_telp_pelanggan', $data['no_telp_pelanggan']);
-            $stmt->bindParam(':tanggal_sewa', $data['tanggal_sewa']);
-            $stmt->bindParam(':jam_mulai', $data['jam_mulai']);
-            $stmt->bindParam(':jam_selesai', $data['jam_selesai']);
-            $stmt->bindParam(':total_biaya', $data['total_biaya']);
-            $stmt->execute();
-            $booking_id = $this->conn->lastInsertId();
+        // 1. Insert ke tabel booking (sama seperti sebelumnya)
+        $query = "INSERT INTO booking (id_lapangan, nama_pelanggan, email_pelanggan, no_telp_pelanggan, 
+                  tanggal_sewa, jam_mulai, jam_selesai, total_biaya, status_booking)
+                  VALUES (:id_lapangan, :nama_pelanggan, :email_pelanggan, :no_telp_pelanggan,
+                  :tanggal_sewa, :jam_mulai, :jam_selesai, :total_biaya, 1)";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_lapangan', $data['id_lapangan']);
+        $stmt->bindParam(':nama_pelanggan', $data['nama_pelanggan']);
+        $stmt->bindParam(':email_pelanggan', $data['email_pelanggan']);
+        $stmt->bindParam(':no_telp_pelanggan', $data['no_telp_pelanggan']);
+        $stmt->bindParam(':tanggal_sewa', $data['tanggal_sewa']);
+        $stmt->bindParam(':jam_mulai', $data['jam_mulai']);
+        $stmt->bindParam(':jam_selesai', $data['jam_selesai']);
+        $stmt->bindParam(':total_biaya', $data['total_biaya']);
+        $stmt->execute();
+        $booking_id = $this->conn->lastInsertId();
 
-            // 2. Upload file bukti transfer
-            $target_dir = "uploads/";
-            $file_name = time() . '_' . basename($file_bukti['name']);
-            $target_file = $target_dir . $file_name;
-            move_uploaded_file($file_bukti['tmp_name'], $target_file);
+        // 2. Upload file bukti transfer
+        $target_dir = "uploads/";
+        $file_name = time() . '_' . basename($file_bukti['name']);
+        $target_file = $target_dir . $file_name;
+        move_uploaded_file($file_bukti['tmp_name'], $target_file);
 
-            // 3. Insert ke tabel pembayaran
-            $kode_transaksi = rand(100000, 999999);
-            $batas_waktu = date('H:i:s', strtotime('+24 hours'));
-            $query2 = "INSERT INTO pembayaran (id_booking, jumlah_bayar, metode_bayar, bukti_transfer, 
-                       status_bayar, kode_transaksi, batas_waktu, tanggal_bayar)
-                       VALUES (:id_booking, :jumlah_bayar, 1, :bukti_transfer, 0, :kode_transaksi, :batas_waktu, NULL)";
-            $stmt2 = $this->conn->prepare($query2);
-            $stmt2->bindParam(':id_booking', $booking_id);
-            $stmt2->bindParam(':jumlah_bayar', $data['total_biaya']);
-            $stmt2->bindParam(':bukti_transfer', $file_name);
-            $stmt2->bindParam(':kode_transaksi', $kode_transaksi);
-            $stmt2->bindParam(':batas_waktu', $batas_waktu);
-            $stmt2->execute();
+        // 3. Insert ke tabel pembayaran dengan metode_bayar
+        $query2 = "INSERT INTO pembayaran (id_booking, jumlah_bayar, metode_bayar, bukti_transfer, tanggal_bayar)
+                   VALUES (:id_booking, :jumlah_bayar, :metode_bayar, :bukti_transfer, 0)";
+        $stmt2 = $this->conn->prepare($query2);
+        $stmt2->bindParam(':id_booking', $booking_id);
+        $stmt2->bindParam(':jumlah_bayar', $data['total_biaya']);
+        $stmt2->bindParam(':metode_bayar', $metode_bayar);
+        $stmt2->bindParam(':bukti_transfer', $file_name);
+        $stmt2->execute();
 
-            $this->conn->commit();
-            return $booking_id;
-        } catch (Exception $e) {
-            $this->conn->rollBack();
-            return false;
-        }
+        $this->conn->commit();
+        return $booking_id;
+    } catch (Exception $e) {
+        $this->conn->rollBack();
+        return false;
     }
+}
 
     // Cek ketersediaan lapangan (apakah sudah dibooking pada tanggal dan jam tersebut)
     public function cekKetersediaan($id_lapangan, $tanggal_sewa, $jam_mulai, $jam_selesai) {
@@ -81,11 +77,12 @@ class BookingModel {
 
     // Untuk admin: ambil semua booking dengan JOIN lapangan dan pembayaran
     public function getAllBookingsForAdmin() {
-        $query = "SELECT b.*, l.nama_lapangan, l.harga_per_jam, p.bukti_transfer, p.status_bayar, p.kode_transaksi
-                  FROM booking b
-                  INNER JOIN lapangan l ON b.id_lapangan = l.id
-                  LEFT JOIN pembayaran p ON b.id = p.id_booking
-                  ORDER BY b.tanggal_sewa DESC, b.jam_mulai ASC";
+        $query = "SELECT b.*, l.nama_lapangan, l.harga_per_jam, 
+                     p.bukti_transfer, p.metode_bayar
+              FROM booking b
+              INNER JOIN lapangan l ON b.id_lapangan = l.id
+              LEFT JOIN pembayaran p ON b.id = p.id_booking
+              ORDER BY b.tanggal_sewa DESC, b.jam_mulai ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -101,13 +98,13 @@ class BookingModel {
     }
 
     // Admin: update status pembayaran menjadi lunas
-    public function updateStatusPembayaran($id_booking, $status_bayar = 1) {
-        $query = "UPDATE pembayaran SET status_bayar = :status, tanggal_bayar = CURDATE() WHERE id_booking = :id_booking";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':status', $status_bayar);
-        $stmt->bindParam(':id_booking', $id_booking);
-        return $stmt->execute();
-    }
+    // public function updateStatusPembayaran($id_booking, $ = 1) {
+    //     $query = "UPDATE pembayaran SET status_bayar = :status, tanggal_bayar = CURDATE() WHERE id_booking = :id_booking";
+    //     $stmt = $this->conn->prepare($query);
+    //     $stmt->bindParam(':status', $status_bayar);
+    //     $stmt->bindParam(':id_booking', $id_booking);
+    //     return $stmt->execute();
+    // }
 
     // Fungsi agregat untuk dashboard admin
     public function getJumlahBookingMenunggu() {
@@ -124,5 +121,17 @@ class BookingModel {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         return $result['total'] ? $result['total'] : 0;
     }
+
+    public function getBookingsByEmail($email) {
+    $query = "SELECT b.*, l.nama_lapangan, p.bukti_transfer
+              FROM booking b
+              INNER JOIN lapangan l ON b.id_lapangan = l.id
+              LEFT JOIN pembayaran p ON b.id = p.id_booking
+              WHERE b.email_pelanggan = :email
+              ORDER BY b.tanggal_sewa DESC, b.jam_mulai DESC";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':email', $email);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-?>
+}
