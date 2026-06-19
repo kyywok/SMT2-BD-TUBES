@@ -3,7 +3,7 @@
 <!-- Hero Section -->
 <div class="text-center bg-primary text-white p-5 rounded mb-4">
     <h1> Arena Sport Booking</h1>
-    <p>Booking lapangan futsal, badminton, dan tennis dengan mudah</p>
+    <p>Booking lapangan futsal dan badminton dengan mudah</p>
 </div>
 
 <!-- Daftar Lapangan -->
@@ -16,10 +16,10 @@
             <?php 
             // Mapping gambar berdasarkan nama_lapangan
             $foto_map = [
-                'A1' => 'assets/img/badminton1.jfif',
-                'A2' => 'assets/img/badminton2.jfif',
-                'B1' => 'assets/img/futsal1.jfif',
-                'B2' => 'assets/img/futsal2.jfif',
+                'A1' => 'assets/img/A1.jfif',
+                'A2' => 'assets/img/A2.jfif',
+                'B1' => 'assets/img/B1.jfif',
+                'B2' => 'assets/img/B2.jfif',
             ];
             $foto_src = $foto_map[$lapangan['nama_lapangan']] ?? 'assets/img/default.jpg';
             ?>
@@ -38,7 +38,6 @@
                         else echo 'Tennis';
                     ?><br>
                     <strong>Harga:</strong> Rp <?= number_format($lapangan['harga_per_jam'],0,',','.') ?> / jam<br>
-                    <strong>Fasilitas:</strong> <?= htmlspecialchars($lapangan['fasilitas']) ?><br>
                     <strong>Status:</strong> 
                     <?php if($lapangan['status_lapangan']==1): ?>
                         <span class="badge bg-success">Tersedia</span>

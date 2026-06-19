@@ -1,17 +1,20 @@
 
 <?php
-// controllers/BookingController.php (bagian yang diubah)
 // session_start();
 require_once 'models/BookingModel.php';
 require_once 'models/LapanganModel.php';
+require_once 'models/PelangganModel.php';  
+
 
 class BookingController {
     private $bookingModel;
     private $lapanganModel;
+    private $pelangganModel; 
 
     public function __construct() {
         $this->bookingModel = new BookingModel();
         $this->lapanganModel = new LapanganModel();
+        $this->pelangganModel = new PelangganModel();
     }
 
     // STEP 1: Tampilkan form booking (jika ada id_lapangan dari URL, pre-select)
@@ -111,22 +114,27 @@ class BookingController {
     }
 
     // STEP 2: Proses upload bukti dan simpan ke database
-    public function processPayment() {
+      public function processPayment() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_SESSION['temp_booking'])) {
             $temp = $_SESSION['temp_booking'];
 
-            // Validasi file upload
-            if (!isset($_FILES['bukti_transfer']) || $_FILES['bukti_transfer']['error'] != 0) {
-                echo "<script>alert('Harap upload bukti transfer!'); window.history.back();</script>";
+            // 1. Dapatkan atau buat pelanggan berdasarkan email
+            $dataPelanggan = [
+                'nama_pelanggan' => $temp['nama_pelanggan'],
+                'email_pelanggan' => $temp['email_pelanggan'],
+                'no_telp_pelanggan' => $temp['no_telp_pelanggan']
+            ];
+            $id_pelanggan = $this->pelangganModel->getOrCreatePelanggan($dataPelanggan);
+
+            if (!$id_pelanggan) {
+                echo "<script>alert('Gagal menyimpan data pelanggan.'); window.history.back();</script>";
                 return;
             }
 
-            // Siapkan data untuk disimpan
-            $data = [
+            // 2. Siapkan data booking dengan id_pelanggan
+            $dataBooking = [
+                'id_pelanggan' => $id_pelanggan,
                 'id_lapangan' => $temp['id_lapangan'],
-                'nama_pelanggan' => $temp['nama_pelanggan'],
-                'email_pelanggan' => $temp['email_pelanggan'],
-                'no_telp_pelanggan' => $temp['no_telp_pelanggan'],
                 'tanggal_sewa' => $temp['tanggal_sewa'],
                 'jam_mulai' => $temp['jam_mulai'],
                 'jam_selesai' => $temp['jam_selesai'],
@@ -134,10 +142,9 @@ class BookingController {
             ];
 
             $metode_bayar = isset($_POST['metode_bayar']) ? (int)$_POST['metode_bayar'] : 1;
-            $booking_id = $this->bookingModel->createBookingWithPayment($data, $_FILES['bukti_transfer'], $metode_bayar);
-
+            $booking_id = $this->bookingModel->createBookingWithPayment($dataBooking, $_FILES['bukti_transfer'], $metode_bayar);
+            
             if ($booking_id) {
-                // Hapus data sementara dari session
                 unset($_SESSION['temp_booking']);
                 header("Location: index.php?controller=booking&action=success&id=" . $booking_id);
             } else {
@@ -147,6 +154,7 @@ class BookingController {
             header("Location: index.php?controller=home&action=index");
         }
     }
+
 
       // Halaman sukses setelah booking
     public function success() {
@@ -178,27 +186,31 @@ class BookingController {
     }
 
     // Admin: update status booking (via AJAX atau POST)
-    public function updateStatus() {
-        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-            header("Location: index.php?controller=auth&action=loginForm");
-            exit();
+ // controllers/BookingController.php
+public function updateStatus() {
+    if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+        header("Location: index.php?controller=auth&action=loginForm");
+        exit();
+    }
+
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $id_booking = isset($_POST['id_booking']) ? (int)$_POST['id_booking'] : 0;
+        $status_booking = isset($_POST['status_booking']) ? (int)$_POST['status_booking'] : 1;
+
+        if (!in_array($status_booking, [1,2,3])) {
+            echo "<script>alert('Status tidak valid!'); window.history.back();</script>";
+            return;
         }
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $id_booking = $_POST['id_booking'];
-            $status_booking = $_POST['status_booking'];
-
-            if ($this->bookingModel->updateStatusBooking($id_booking, $status_booking)) {
-                // Jika status booking menjadi lunas (2), update juga status pembayaran
-                if ($status_booking == 2) {
-                    $this->bookingModel->updateStatusPembayaran($id_booking, 1);
-                }
-                echo "<script>alert('Status booking berhasil diubah!'); window.location.href='index.php?controller=booking&action=index';</script>";
-            } else {
-                echo "<script>alert('Gagal mengubah status.'); window.history.back();</script>";
-            }
+        if ($this->bookingModel->updateStatusBooking($id_booking, $status_booking)) {
+            // ✅ INI YANG KURANG
+            header("Location: index.php?controller=booking&action=index");
+            exit();
+        } else {
+            echo "<script>alert('Gagal mengubah status.'); window.history.back();</script>";
         }
     }
+}
 
 
 }

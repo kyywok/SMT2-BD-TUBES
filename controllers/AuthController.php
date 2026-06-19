@@ -3,7 +3,6 @@
 // controllers/AuthController.php
 // session_start();
 require_once 'models/UsersModel.php';
-
 class AuthController {
     private $userModel;
 
@@ -16,11 +15,12 @@ class AuthController {
     }
 
     public function login() {
+        
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $email = $_POST['email'];
             $password = $_POST['password'];
             $user = $this->userModel->getUserByEmail($email);
-            if ($user && password_verify($password, $user['password'])) {
+            if ($user && $user['password'] === md5($password)) {
                 $_SESSION['admin_logged_in'] = true;
                 $_SESSION['admin_nama'] = $user['nama'];
                 $_SESSION['admin_email'] = $user['email'];

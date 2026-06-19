@@ -6,7 +6,7 @@
 <div class="row mb-3">
     <div class="col-md-6">
         <div class="card text-white bg-black">
-            <div class="card-body">
+            <div class="card-body text-center">
                 <h5>Booking Menunggu Konfirmasi</h5>
                 <h3><?= $jumlahMenunggu ?></h3>
             </div>
@@ -14,7 +14,7 @@
     </div>
     <div class="col-md-6">
         <div class="card text-white bg-black">
-            <div class="card-body">
+            <div class="card-body text-center">
                 <h5>Total Pendapatan </h5>
                 <h3>Rp <?= number_format($totalPendapatan,0,',','.') ?></h3>
             </div>
@@ -29,14 +29,15 @@
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th>ID</th><th>Pelanggan</th><th>Lapangan</th><th>Tanggal</th><th>Jam</th><th>Total</th><th>Metode Bayar</th>
+            <th>No</th><th>Pelanggan</th><th>Lapangan</th><th>Tanggal</th><th>Jam</th><th>Total</th><th>Metode Bayar</th>
             <th>Status Booking</th><th>Bukti</th><th>Aksi</th>
         </tr>
     </thead>
     <tbody>
+        <?php $no = 1; ?>
         <?php foreach($bookings as $b): ?>
         <tr>
-            <td><?= $b['id'] ?></td>
+            <td><?= $no++ ?></td>
             <td><?= htmlspecialchars($b['nama_pelanggan']) ?><br><small><?= $b['email_pelanggan'] ?></small></td>
             <td><?= htmlspecialchars($b['nama_lapangan']) ?></td>
             <td><?= date('d-m-Y', strtotime($b['tanggal_sewa'])) ?></td>
@@ -45,10 +46,18 @@
             <td><?= ($b['metode_bayar'] ?? 0) == 1 ? 'BCA' : (($b['metode_bayar'] ?? 0) == 2 ? 'QRIS' : '-') ?></td>
             <td>
                 <?php
-                    if ($b['status_booking'] == 1) echo '<span class="badge bg-warning">Menunggu</span>';
-                    elseif ($b['status_booking'] == 2) echo '<span class="badge bg-success">Lunas</span>';
-                    else echo '<span class="badge bg-danger">Batal</span>';
-                ?>
+$status = (int)$b['status_booking']; // 🔥 paksa jadi integer
+
+if ($status === 1) {
+    echo '<span class="badge bg-warning">Menunggu</span>';
+} elseif ($status === 2) {
+    echo '<span class="badge bg-success">Dikonfirmasi</span>';
+} elseif ($status === 3) {
+    echo '<span class="badge bg-danger">Batal</span>';
+} else {
+    echo '<span class="badge bg-secondary">Unknown (' . $status . ')</span>';
+}
+?>
             </td>
             <td>
                 <?php if($b['bukti_transfer']): ?>
@@ -67,7 +76,7 @@
                     </select>
                     <button type="submit" class="btn btn-sm btn-primary">Update</button>
                 </form>
-            </td>
+            </td>   
         </tr>
         <?php endforeach; ?>
     </tbody>

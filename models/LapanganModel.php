@@ -30,13 +30,12 @@ class LapanganModel {
 
     // INSERT lapangan baru (DML - CREATE)
     public function createLapangan($data) {
-        $query = "INSERT INTO lapangan (nama_lapangan, jenis_lapangan, harga_per_jam, fasilitas, status_lapangan)
-                  VALUES (:nama_lapangan, :jenis_lapangan, :harga_per_jam, :fasilitas, :status_lapangan)";
+        $query = "INSERT INTO lapangan (nama_lapangan, jenis_lapangan, harga_per_jam, status_lapangan)
+                  VALUES (:nama_lapangan, :jenis_lapangan, :harga_per_jam, :status_lapangan)";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':nama_lapangan', $data['nama_lapangan']);
         $stmt->bindParam(':jenis_lapangan', $data['jenis_lapangan']);
         $stmt->bindParam(':harga_per_jam', $data['harga_per_jam']);
-        $stmt->bindParam(':fasilitas', $data['fasilitas']);
         $stmt->bindParam(':status_lapangan', $data['status_lapangan']);
         if($stmt->execute()) {
             return $this->conn->lastInsertId();
@@ -50,7 +49,6 @@ class LapanganModel {
                     nama_lapangan = :nama_lapangan,
                     jenis_lapangan = :jenis_lapangan,
                     harga_per_jam = :harga_per_jam,
-                    fasilitas = :fasilitas,
                     status_lapangan = :status_lapangan
                   WHERE id = :id";
         $stmt = $this->conn->prepare($query);
@@ -58,7 +56,6 @@ class LapanganModel {
         $stmt->bindParam(':nama_lapangan', $data['nama_lapangan']);
         $stmt->bindParam(':jenis_lapangan', $data['jenis_lapangan']);
         $stmt->bindParam(':harga_per_jam', $data['harga_per_jam']);
-        $stmt->bindParam(':fasilitas', $data['fasilitas']);
         $stmt->bindParam(':status_lapangan', $data['status_lapangan']);
         return $stmt->execute();
     }

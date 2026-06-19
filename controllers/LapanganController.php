@@ -28,7 +28,6 @@ class LapanganController {
                 'nama_lapangan' => $_POST['nama_lapangan'],
                 'jenis_lapangan' => $_POST['jenis_lapangan'],
                 'harga_per_jam' => $_POST['harga_per_jam'],
-                'fasilitas' => $_POST['fasilitas'],
                 'status_lapangan' => $_POST['status_lapangan']
             ];
             if($this->model->createLapangan($data)) {
@@ -52,7 +51,6 @@ class LapanganController {
                 'nama_lapangan' => $_POST['nama_lapangan'],
                 'jenis_lapangan' => $_POST['jenis_lapangan'],
                 'harga_per_jam' => $_POST['harga_per_jam'],
-                'fasilitas' => $_POST['fasilitas'],
                 'status_lapangan' => $_POST['status_lapangan']
             ];
             if($this->model->updateLapangan($id, $data)) {

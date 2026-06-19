@@ -7,17 +7,17 @@
 <table class="table table-bordered table-striped">
     <thead>
         <tr>
-            <th>ID</th><th>Nama Lapangan</th><th>Jenis</th><th>Harga/Jam</th><th>Fasilitas</th><th>Status</th><th>Aksi</th>
+            <th>No</th><th>Nama Lapangan</th><th>Jenis</th><th>Harga/Jam</th><th>Status</th><th>Aksi</th>
         </tr>
     </thead>
     <tbody>
-        <?php foreach($lapanganList as $lap): ?>
+        <?php $no = 1; ?>
+        <?php foreach($lapanganList as $lap):  ?>
         <tr>
-            <td><?= $lap['id'] ?></td>
+            <td><?= $po = $no++ ?></td>
             <td><?= htmlspecialchars($lap['nama_lapangan']) ?></td>
             <td><?= $lap['jenis_lapangan'] == 1 ? 'Badminton' : ($lap['jenis_lapangan'] == 2 ? 'Futsal' : 'Tennis') ?></td>
             <td>Rp <?= number_format($lap['harga_per_jam'], 0, ',', '.') ?></td>
-            <td><?= htmlspecialchars($lap['fasilitas']) ?></td>
             <td><?= $lap['status_lapangan'] == 1 ? '<span class="badge bg-success">Tersedia</span>' : '<span class="badge bg-danger">Tidak Tersedia</span>' ?></td>
             <td>
                 <a href="index.php?controller=lapangan&action=edit&id=<?= $lap['id'] ?>" class="btn btn-sm btn-warning">Edit</a>

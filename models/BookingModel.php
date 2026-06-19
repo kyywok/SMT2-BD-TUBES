@@ -12,20 +12,17 @@ class BookingModel {
     }
 
     // Method untuk booking tanpa login (pelanggan umum)
-    public function createBookingWithPayment($data, $file_bukti, $metode_bayar) {
+    // models/BookingModel.php
+public function createBookingWithPayment($data, $file_bukti, $metode_bayar) {
     try {
         $this->conn->beginTransaction();
 
-        // 1. Insert ke tabel booking (sama seperti sebelumnya)
-        $query = "INSERT INTO booking (id_lapangan, nama_pelanggan, email_pelanggan, no_telp_pelanggan, 
-                  tanggal_sewa, jam_mulai, jam_selesai, total_biaya, status_booking)
-                  VALUES (:id_lapangan, :nama_pelanggan, :email_pelanggan, :no_telp_pelanggan,
-                  :tanggal_sewa, :jam_mulai, :jam_selesai, :total_biaya, 1)";
+        // 1. Insert ke tabel booking (HANYA kolom yang ada di tabel booking)
+        $query = "INSERT INTO booking (id_pelanggan, id_lapangan, tanggal_sewa, jam_mulai, jam_selesai, total_biaya, status_booking)
+                  VALUES (:id_pelanggan, :id_lapangan, :tanggal_sewa, :jam_mulai, :jam_selesai, :total_biaya, 1)";
         $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_pelanggan', $data['id_pelanggan']);
         $stmt->bindParam(':id_lapangan', $data['id_lapangan']);
-        $stmt->bindParam(':nama_pelanggan', $data['nama_pelanggan']);
-        $stmt->bindParam(':email_pelanggan', $data['email_pelanggan']);
-        $stmt->bindParam(':no_telp_pelanggan', $data['no_telp_pelanggan']);
         $stmt->bindParam(':tanggal_sewa', $data['tanggal_sewa']);
         $stmt->bindParam(':jam_mulai', $data['jam_mulai']);
         $stmt->bindParam(':jam_selesai', $data['jam_selesai']);
@@ -33,15 +30,17 @@ class BookingModel {
         $stmt->execute();
         $booking_id = $this->conn->lastInsertId();
 
-        // 2. Upload file bukti transfer
+        // 2. Upload file bukti transfer (sama seperti sebelumnya)
         $target_dir = "uploads/";
         $file_name = time() . '_' . basename($file_bukti['name']);
         $target_file = $target_dir . $file_name;
-        move_uploaded_file($file_bukti['tmp_name'], $target_file);
+        if (!move_uploaded_file($file_bukti['tmp_name'], $target_file)) {
+            throw new Exception("Gagal upload file bukti transfer");
+        }
 
-        // 3. Insert ke tabel pembayaran dengan metode_bayar
+        // 3. Insert ke tabel pembayaran (sesuai struktur PDM Anda)
         $query2 = "INSERT INTO pembayaran (id_booking, jumlah_bayar, metode_bayar, bukti_transfer, tanggal_bayar)
-                   VALUES (:id_booking, :jumlah_bayar, :metode_bayar, :bukti_transfer, 0)";
+                   VALUES (:id_booking, :jumlah_bayar, :metode_bayar, :bukti_transfer, NULL)";
         $stmt2 = $this->conn->prepare($query2);
         $stmt2->bindParam(':id_booking', $booking_id);
         $stmt2->bindParam(':jumlah_bayar', $data['total_biaya']);
@@ -53,6 +52,8 @@ class BookingModel {
         return $booking_id;
     } catch (Exception $e) {
         $this->conn->rollBack();
+        // Tulis error ke file untuk debugging
+        file_put_contents('error_log.txt', date('Y-m-d H:i:s') . ' - ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
         return false;
     }
 }
@@ -76,25 +77,33 @@ class BookingModel {
     }
 
     // Untuk admin: ambil semua booking dengan JOIN lapangan dan pembayaran
-    public function getAllBookingsForAdmin() {
-        $query = "SELECT b.*, l.nama_lapangan, l.harga_per_jam, 
-                     p.bukti_transfer, p.metode_bayar
+   public function getAllBookingsForAdmin() {
+    $query = "SELECT b.*, 
+                     l.nama_lapangan, l.harga_per_jam, 
+                     p.bukti_transfer, p.metode_bayar, p.tanggal_bayar,
+                     pel.nama_pelanggan, pel.email_pelanggan, pel.no_telp_pelanggan
               FROM booking b
               INNER JOIN lapangan l ON b.id_lapangan = l.id
+              INNER JOIN pelanggan pel ON b.id_pelanggan = pel.id
               LEFT JOIN pembayaran p ON b.id = p.id_booking
               ORDER BY b.tanggal_sewa DESC, b.jam_mulai ASC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
     // Admin: ubah status booking (1=menunggu, 2=lunas, 3=batal)
     public function updateStatusBooking($id_booking, $status_booking) {
-        $query = "UPDATE booking SET status_booking = :status WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':status', $status_booking);
-        $stmt->bindParam(':id', $id_booking);
-        return $stmt->execute();
+          $query = "UPDATE booking SET status_booking = :status_booking WHERE id = :id_booking";
+    $stmt = $this->conn->prepare($query);
+
+    $stmt->bindValue(':status_booking', (int)$status_booking, PDO::PARAM_INT);
+    $stmt->bindValue(':id_booking', (int)$id_booking, PDO::PARAM_INT);
+
+    $stmt->execute();
+
+    // 🔥 CEK apakah benar update
+    return $stmt->rowCount();
     }
 
     // Admin: update status pembayaran menjadi lunas
@@ -122,12 +131,16 @@ class BookingModel {
         return $result['total'] ? $result['total'] : 0;
     }
 
-    public function getBookingsByEmail($email) {
-    $query = "SELECT b.*, l.nama_lapangan, p.bukti_transfer
+public function getBookingsByEmail($email) {
+    $query = "SELECT b.*, l.nama_lapangan, 
+                     p.metode_bayar, p.bukti_transfer, p.tanggal_bayar,
+                     pel.nama_pelanggan, pel.email_pelanggan, pel.no_telp_pelanggan,
+                     b.status_booking
               FROM booking b
               INNER JOIN lapangan l ON b.id_lapangan = l.id
+              INNER JOIN pelanggan pel ON b.id_pelanggan = pel.id
               LEFT JOIN pembayaran p ON b.id = p.id_booking
-              WHERE b.email_pelanggan = :email
+              WHERE pel.email_pelanggan = :email
               ORDER BY b.tanggal_sewa DESC, b.jam_mulai DESC";
     $stmt = $this->conn->prepare($query);
     $stmt->bindParam(':email', $email);

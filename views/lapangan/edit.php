@@ -20,10 +20,6 @@
                 <input type="number" name="harga_per_jam" class="form-control" value="<?= $lapangan['harga_per_jam'] ?>" required>
             </div>
             <div class="mb-3">
-                <label>Fasilitas</label>
-                <textarea name="fasilitas" class="form-control"><?= htmlspecialchars($lapangan['fasilitas']) ?></textarea>
-            </div>
-            <div class="mb-3">
                 <label>Status</label>
                 <select name="status_lapangan" class="form-select">
                     <option value="1" <?= $lapangan['status_lapangan']==1?'selected':'' ?>>Tersedia</option>

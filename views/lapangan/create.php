@@ -20,10 +20,6 @@
                 <input type="number" name="harga_per_jam" class="form-control" required>
             </div>
             <div class="mb-3">
-                <label>Fasilitas</label>
-                <textarea name="fasilitas" class="form-control" rows="2"></textarea>
-            </div>
-            <div class="mb-3">
                 <label>Status</label>
                 <select name="status_lapangan" class="form-select">
                     <option value="1">Tersedia</option>
