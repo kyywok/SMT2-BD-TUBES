@@ -92,7 +92,7 @@ public function createBookingWithPayment($data, $file_bukti, $metode_bayar) {
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-    // Admin: ubah status booking (1=menunggu, 2=lunas, 3=batal)
+    // Admin: ubah status booking (1=menunggu, 2=dikonfirmasi, 3=batal)
     public function updateStatusBooking($id_booking, $status_booking) {
           $query = "UPDATE booking SET status_booking = :status_booking WHERE id = :id_booking";
     $stmt = $this->conn->prepare($query);
@@ -102,7 +102,7 @@ public function createBookingWithPayment($data, $file_bukti, $metode_bayar) {
 
     $stmt->execute();
 
-    // 🔥 CEK apakah benar update
+    // CEK apakah benar update
     return $stmt->rowCount();
     }
 

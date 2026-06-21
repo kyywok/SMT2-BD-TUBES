@@ -39,7 +39,7 @@
         </div>
         <div id="infoQRIS" class="alert alert-success" style="display: none;">
             <strong>Scan QR Code berikut untuk membayar menggunakan QRIS:</strong><br>
-            <img src="assets/img/Qris.png" alt="QRIS Code" style="width: 200px; height: auto; margin-top: 10px;"><br>
+            <img src="assets/img/Qris1.jpeg" alt="QRIS Code" style="width: 200px; height: auto; margin-top: 10px;"><br>
             <small>Setelah scan dan pembayaran sukses, upload bukti transfer (screenshot QRIS) di bawah.</small>
         </div>
 
